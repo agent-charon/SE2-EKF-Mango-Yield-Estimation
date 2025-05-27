@@ -1,0 +1,9 @@
+numpy
+opencv-python
+opencv-contrib-python # For some tracking/stabilization algorithms if needed
+scipy
+pyyaml
+torch # Or torch torchvision torchaudio specific to your system
+torchvision
+torchaudio
+ultralytics # For YOLOv8, if used directly

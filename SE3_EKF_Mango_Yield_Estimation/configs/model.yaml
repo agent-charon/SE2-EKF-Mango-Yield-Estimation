@@ -1,0 +1,20 @@
+# YOLOv8s configuration for mango detection (based on Ultralytics YOLOv8s or similar)
+yolo_detector:
+  type: "yolov8s" # Corresponds to Ultralytics YOLOv8s specifications
+  num_classes: 1 # Mango
+  # Specific architectural parameters like depth_multiple, width_multiple can be added
+  # if building from components, but usually handled by the base model type.
+  pretrained_weights_path: "yolov8s.pt" # Optional path to official pretrained COCO weights for transfer learning
+
+# Masked YOLO (e.g., Insta-YOLO from paper [44]) for canopy segmentation
+# This configuration is more abstract as "Masked YOLO" isn't a single standard model like YOLOv8s.
+# It implies a YOLO-based instance segmentation model.
+canopy_segmenter:
+  type: "insta_yolo" # Placeholder for the specific architecture used in paper [44]
+  num_classes: 1 # Tree canopy
+  pretrained_weights_path: "coco_segmentation_pretrained.pt" # For transfer learning
+  # Parameters specific to the segmentation model's backbone, neck, head
+  backbone: "csp_darknet_like"
+  neck: "panet_like"
+  segmentation_head: "mask_head_yolo_style"
+  input_size: [640, 640] # Example input size for segmentation model

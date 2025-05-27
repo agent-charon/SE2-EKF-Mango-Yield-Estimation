@@ -1,0 +1,41 @@
+
+---
+
+**`configs/dataset.yaml`**
+```yaml
+# Paths to the Banginapalle Mango Dataset
+# Assumes videos and corresponding annotations (if any, for ground truth labeling)
+# For YOLO training, data should be structured as per YOLO guidelines (images and .txt label files)
+
+train_video_dir: "data/raw_videos/train/"
+val_video_dir: "data/raw_videos/val/"
+test_video_dir: "data/raw_videos/test/" # 10 videos for testing as per paper
+
+# For YOLO model training (frames extracted from videos)
+train_image_dir: "data/processed_frames/train/images/"
+train_label_dir: "data/processed_frames/train/labels/"
+val_image_dir: "data/processed_frames/val/images/"
+val_label_dir: "data/processed_frames/val/labels/"
+
+# For canopy segmentation model training (frames and masks)
+canopy_train_image_dir: "data/canopy_segmentation/train/images/"
+canopy_train_mask_dir: "data/canopy_segmentation/train/masks/" # 500 annotated mango tree images
+canopy_val_image_dir: "data/canopy_segmentation/val/images/"
+canopy_val_mask_dir: "data/canopy_segmentation/val/masks/"
+
+# Class names (for mango detection)
+classes: ['mango']
+num_classes: 1
+
+# Video properties
+fps: 30 # As per paper
+image_width: 1920
+image_height: 1080
+
+# Ground truth for evaluation (manual labeling count LC, harvest count HC)
+# This might be a CSV or structured text file
+ground_truth_counts_path: "data/ground_truth/counts.csv"
+# Example CSV format:
+# video_id,label_count,harvest_count
+# video1.mp4,57,72
+# video2.mp4,34,62

@@ -1,0 +1,94 @@
+# Extended Kalman Filter (EKF) parameters
+ekf:
+  # State vector: [x1, y1, x2, y2, vx1, vy1, vx2, vy2, theta, delta_theta] (10 elements)
+  # Note: Paper's Fk (Eq. 2) implies velocities for box center or individual corners.
+  # If x1,y1,x2,y2 are TL and BR corners, velocities might be for these corners.
+  # Let's assume vx1, vy1 for top-left and vx2, vy2 for bottom-right for now.
+  # Theta is rotational angle, delta_theta is change in rotational angle.
+
+  # Initial state covariance (P0) - diagonal matrix, uncertainty in initial state
+  # Values should reflect expected variance. High for velocities, moderate for positions/angle.
+  initial_covariance_diag:
+    # Positional variance (pixels^2)
+    pos_tl_x: 100.0
+    pos_tl_y: 100.0
+    pos_br_x: 100.0
+    pos_br_y: 100.0
+    # Velocity variance (pixels/frame)^2 or (pixels/sec)^2 depending on delta_t
+    vel_tl_x: 25.0
+    vel_tl_y: 25.0
+    vel_br_x: 25.0
+    vel_br_y: 25.0
+    # Angular variance (radians^2)
+    angle_theta: 0.1 # Approx (5-6 degrees)^2
+    # Angular velocity variance (radians/frame)^2 or (radians/sec)^2
+    angle_delta_theta: 0.01 # Approx (0.5-1 degree/frame)^2
+
+  # Process noise covariance (Qk) - diagonal matrix, uncertainty in the process model
+  # From paper Eq. 9:
+  # 0.05*mu_k-1 for pos (mu_k-1 is control input, which is mean of state vars - seems unusual,
+  # typically Q is fixed or adaptive but not directly scaled by state mean this way)
+  # Let's use small fixed values reflecting typical process noise for now, which is more standard.
+  # The paper's Qk structure is very specific and might need careful interpretation of mu_k-1.
+  # If mu_k-1 is indeed control input (like external forces), it's often zero if not modeled.
+  # The values in Eq. 9 seem like variances for each state component.
+  process_noise_diag:
+    # Positional noise
+    pos_tl_x_noise: 0.05 # Example: 0.05 * (some average velocity or displacement) - requires clarification on mu_k-1
+    pos_tl_y_noise: 0.05 # If paper's mu_k-1 is control input, and it's 0, then these are 0, which is problematic.
+                         # Let's use small fixed values based on magnitude of state variables.
+                         # Units: (units of state variable)^2
+    # Let's take values from the image of Eq. 9 as direct variances.
+    # The matrix Qk seems to be:
+    # diag([0.05*mu_k-1_x, 0.05*mu_k-1_y, 10e-2, 10e-2, 10e-3, 10e-5, 10e-5, 10e-6, 10e-6, 10e-7])
+    # This interpretation of mu_k-1 as part of the first two diagonal elements is still tricky.
+    # For simplicity and robustness, standard practice is to tune Q based on expected model inaccuracies.
+    # Let's provide tunable fixed values first, then one could implement the paper's specific Q.
+    # (pixels^2 or (pixels/update_interval)^2 etc.)
+    pos_x_q: 1.0      # Variance for x positions
+    pos_y_q: 1.0      # Variance for y positions
+    vel_x_q: 0.1      # Variance for x velocities
+    vel_y_q: 0.1      # Variance for y velocities
+    theta_q: 0.01     # Variance for theta
+    delta_theta_q: 0.001 # Variance for delta_theta
+    # The paper's Eq 9 looks like specific variance assignments for each state var, not scaled by mu_k-1 throughout.
+    # Let's use these values (assuming mu_k-1 is absorbed or they are direct variances):
+    # The structure of Q in the paper (Eq 9) has 10 elements, but it's not purely diagonal.
+    # It looks like variances for [x_center, y_center, width, height, vx, vy, vw, vh, theta, delta_theta]
+    # or similar. State vector is [x1,y1,x2,y2,...].
+    # For now, providing independent noise terms for each state variable in our defined state vector:
+    q_x1: 1.0           # (pixels)^2
+    q_y1: 1.0           # (pixels)^2
+    q_x2: 1.0           # (pixels)^2
+    q_y2: 1.0           # (pixels)^2
+    q_vx1: 0.25         # (pixels/update_interval)^2
+    q_vy1: 0.25         # (pixels/update_interval)^2
+    q_vx2: 0.25         # (pixels/update_interval)^2
+    q_vy2: 0.25         # (pixels/update_interval)^2
+    q_theta: 0.01       # (radians)^2
+    q_delta_theta: 0.001 # (radians/update_interval)^2
+
+  # Measurement noise covariance (Rk) - diagonal matrix, uncertainty in measurements
+  # Measurement vector zk = [Cx, Cy, width, height, theta_obs]
+  # From paper Eq. 16 (Rk): diag([0.01, 0.01, 0.01, 0.01, 0.01])
+  # These values should correspond to the variance of the measurement variables.
+  measurement_noise_diag:
+    # For [Cx, Cy, width, height, observed_theta]
+    # (pixels^2) for positions and width/height, (radians^2) for angle
+    center_x_r: 10.0      # Variance of measured center_x (e.g., (3-4 pixels)^2)
+    center_y_r: 10.0      # Variance of measured center_y
+    width_r: 10.0         # Variance of measured width
+    height_r: 10.0        # Variance of measured height
+    obs_theta_r: 0.01     # Variance of measured theta (e.g., (5-6 degrees)^2 in radians)
+
+  # Timestep (delta_t) for EKF state transition, in seconds
+  # Paper states 1 second (30 fps aggregated) is optimal.
+  delta_t: 1.0 # seconds
+
+  # ID Assignment
+  id_assignment:
+    iou_threshold: 0.3 # IoU threshold for matching detections to existing tracks
+    max_age: 30        # Max number of frames a track can survive without a match (relates to delta_t)
+                       # If delta_t is 1 sec, max_age of 3 could mean 3 seconds.
+                       # Paper does not specify this, common in trackers like SORT.
+    min_hits: 3        # Min number of consecutive matches to confirm a track.

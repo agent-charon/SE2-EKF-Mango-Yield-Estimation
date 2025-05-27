@@ -1,0 +1,51 @@
+# General Training Hyperparameters
+epochs: 100
+batch_size: 16
+learning_rate: 0.01
+optimizer: "AdamW" # (AdamW is mentioned)
+# Add other optimizer params like weight_decay if needed
+
+# Device
+device: "cuda" # or "cpu"
+
+# YOLOv8s Detector Specifics
+yolo_detector_training:
+  model_config: "configs/model.yaml" # Path to model definition
+  dataset_config: "configs/dataset.yaml"
+  # Augmentations (example, Ultralytics YOLOv8 has its own set)
+  augmentations:
+    hsv_h: 0.015  # Hue augmentation
+    hsv_s: 0.7    # Saturation augmentation
+    hsv_v: 0.4    # Value augmentation
+    degrees: 0.0  # Image rotation (+/- deg)
+    translate: 0.1 # Image translation (+/- fraction)
+    scale: 0.5    # Image scale (+/- gain)
+    flipud: 0.0   # Image flip up-down (probability)
+    fliplr: 0.5   # Image flip left-right (probability)
+    mosaic: 1.0   # Mosaic augmentation (probability)
+  # Checkpoint saving
+  checkpoint_dir: "outputs/checkpoints/yolo_detector/"
+  save_period: 10 # Save checkpoint every N epochs
+
+# Canopy Segmenter (Masked YOLO) Specifics
+canopy_segmenter_training:
+  model_config: "configs/model.yaml"
+  dataset_config: "configs/dataset.yaml"
+  # Augmentations for segmentation
+  augmentations:
+    # Similar to detector, but may include specific ones for segmentation
+    hsv_h: 0.015
+    hsv_s: 0.7
+    hsv_v: 0.4
+    degrees: 10.0
+    translate: 0.1
+    scale: 0.5
+    flipud: 0.5
+    fliplr: 0.5
+  # Loss function (typically a combination for segmentation: e.g., CrossEntropy for masks, Box loss)
+  loss_components: ["box_loss", "class_loss", "mask_loss"]
+  checkpoint_dir: "outputs/checkpoints/canopy_segmenter/"
+  save_period: 10
+
+# Output logging
+log_dir: "outputs/logs/"
